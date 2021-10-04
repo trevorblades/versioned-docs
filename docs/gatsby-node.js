@@ -1,8 +1,9 @@
 const path = require('path');
+const mm = require('micromatch');
 
 exports.createPages = async ({actions, graphql}) => {
   const {data} = await graphql(`
-    query ListPages {
+    {
       allMdx {
         nodes {
           id
@@ -16,14 +17,36 @@ exports.createPages = async ({actions, graphql}) => {
           }
         }
       }
+      allSitePlugin(filter: {name: {eq: "gatsby-source-git"}}) {
+        nodes {
+          pluginOptions {
+            patterns
+            branch
+          }
+        }
+      }
     }
   `);
+
+  const versionPatterns = data.allSitePlugin.nodes.reduce((acc, node) => {
+    const {patterns, branch} = node.pluginOptions;
+    return {
+      ...acc,
+      [branch]: mm.makeRe(patterns, {capture: true})
+    };
+  }, {});
 
   data.allMdx.nodes.forEach(node => {
     const {gitRemote} = node.parent;
     actions.createPage({
       component: require.resolve('./src/templates/page'),
-      path: path.join('/', gitRemote?.ref || '', node.slug),
+      path: gitRemote
+        ? path.join(
+            '/',
+            gitRemote.ref,
+            node.slug.replace(versionPatterns[gitRemote.ref], '$1')
+          )
+        : '/' + node.slug,
       context: {
         id: node.id
       }
