@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import VersionDropdown from '../components/VersionDropdown';
+import {Helmet} from 'react-helmet';
 import {MDXRenderer} from 'gatsby-plugin-mdx';
 import {graphql} from 'gatsby';
 
@@ -8,6 +9,7 @@ export default function PageTemplate({data}) {
   const {body, frontmatter, parent} = data.mdx;
   return (
     <>
+      <Helmet title={frontmatter.title} />
       <VersionDropdown currentRef={parent.gitRemote?.ref} />
       <h1>{frontmatter.title}</h1>
       <MDXRenderer>{body}</MDXRenderer>

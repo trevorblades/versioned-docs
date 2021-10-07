@@ -1,9 +1,9 @@
 const path = require('path');
-const mm = require('micromatch');
+const {makeRe} = require('micromatch');
 
 exports.createPages = async ({actions, graphql}) => {
   const {data} = await graphql(`
-    {
+    query ListPages {
       allMdx {
         nodes {
           id
@@ -32,7 +32,7 @@ exports.createPages = async ({actions, graphql}) => {
     const {patterns, branch} = node.pluginOptions;
     return {
       ...acc,
-      [branch]: mm.makeRe(patterns, {capture: true})
+      [branch]: makeRe(patterns, {capture: true})
     };
   }, {});
 
